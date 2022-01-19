@@ -174,6 +174,47 @@ def e_greedy(days, epsilon=0.1):
     return optimum_happiness, total_happiness, regret, None
 
 
+def ucb(days, c=1):
+    
+    q_a = q_b = q_c = 0
+    Q_a = Q_b = Q_c = 0
+    a = b = c = 0
+
+    total_happiness = 0
+    optimum_happiness = 0
+
+    for day in range(1, days + 1):
+        max_Q = max(Q_a, Q_b, Q_c)
+
+        happiness_a = np.random.normal(10, 5)
+        if Q_a == max_Q:
+            total_happiness += happiness_a
+            optimum_happiness += happiness_a
+            q_a = q_a + (10 ** -7 / (10 ** -7 + a)) * (happiness_a - q_a)
+            a += 1
+
+            Q_a = q_a + c * np.sqrt(np.log(day) / a)
+        elif Q_b == max_Q:
+            happiness_b = np.random.normal(8, 4)
+            total_happiness += happiness_b
+            optimum_happiness += happiness_a
+            q_b = q_b + (10 ** -7 / (10 ** -7 + a)) * (happiness_b - q_b)
+            b += 1
+
+            Q_b = q_b + c * np.sqrt(np.log(day) / b)
+        else:
+            happiness_c = np.random.normal(5, 2.5)
+            total_happiness += happiness_c
+            optimum_happiness += happiness_a
+            q_c = q_c + (10 ** -7 / (10 ** -7 + c)) * (happiness_c - q_c)
+            c += 1
+
+            Q_c = q_c + c * np.sqrt(np.log(day) / c)
+
+    regret = optimum_happiness - total_happiness
+    return optimum_happiness, total_happiness, regret, [q_a, q_b, q_c]
+
+
 def simulate(experiments, func, days):
     optimum_happiness_arr = []
     total_happiness_arr = []
@@ -214,6 +255,9 @@ def main():
 
     optimum_happiness, total_happiness, regret = simulate(num_experiments, e_greedy, 300)
     display("e_greedy policy", optimum_happiness, total_happiness, regret)
+
+    optimum_happiness, total_happiness, regret = simulate(num_experiments, ucb, 300)
+    display("UCB policy", optimum_happiness, total_happiness, regret)
 
 
 if __name__ == "__main__":
